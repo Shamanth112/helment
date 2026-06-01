@@ -8,23 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import {
-  UserPlus,
-  Edit,
-  Trash2,
-  Phone,
-  Mail,
-  Heart,
-  Star,
-  Users,
-} from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { UserPlus, Edit, Trash2, Phone, Mail, Star, Users, Heart, Shield, AlertTriangle } from "lucide-react"
 
 interface Contact {
   id: string
@@ -36,395 +21,266 @@ interface Contact {
 }
 
 const initialContacts: Contact[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    phone: "+1 555-0100",
-    email: "john@example.com",
-    relationship: "Spouse",
-    isPrimary: true,
-  },
-  {
-    id: "2",
-    name: "Jane Doe",
-    phone: "+1 555-0101",
-    email: "jane@example.com",
-    relationship: "Parent",
-    isPrimary: false,
-  },
-  {
-    id: "3",
-    name: "Emergency Contact",
-    phone: "+1 555-0199",
-    email: "emergency@example.com",
-    relationship: "Friend",
-    isPrimary: false,
-  },
+  { id: "1", name: "Priya Sharma",     phone: "+91 98765 43210", email: "priya@example.com",     relationship: "Spouse",  isPrimary: true  },
+  { id: "2", name: "Ramesh Kumar",     phone: "+91 87654 32109", email: "ramesh@example.com",    relationship: "Parent",  isPrimary: false },
+  { id: "3", name: "Anita Desai",      phone: "+91 76543 21098", email: "anita@example.com",     relationship: "Friend",  isPrimary: false },
 ]
 
+const avatarColors = [
+  "from-[var(--primary)] to-[var(--accent)]",
+  "from-emerald-500 to-teal-500",
+  "from-orange-500 to-red-500",
+  "from-violet-500 to-purple-500",
+  "from-pink-500 to-rose-500",
+]
+
+const emptyForm = { name: "", phone: "", email: "", relationship: "", isPrimary: false }
+
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>(initialContacts)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingContact, setEditingContact] = useState<Contact | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [contacts, setContacts]         = useState<Contact[]>(initialContacts)
+  const [dialogOpen, setDialogOpen]     = useState(false)
+  const [editContact, setEditContact]   = useState<Contact | null>(null)
+  const [deleteId, setDeleteId]         = useState<string | null>(null)
+  const [form, setForm]                 = useState(emptyForm)
 
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    relationship: "",
-    isPrimary: false,
-  })
-
-  const handleOpenDialog = (contact?: Contact) => {
-    if (contact) {
-      setEditingContact(contact)
-      setFormData({
-        name: contact.name,
-        phone: contact.phone,
-        email: contact.email,
-        relationship: contact.relationship,
-        isPrimary: contact.isPrimary,
-      })
-    } else {
-      setEditingContact(null)
-      setFormData({
-        name: "",
-        phone: "",
-        email: "",
-        relationship: "",
-        isPrimary: false,
-      })
-    }
-    setIsDialogOpen(true)
-  }
+  const openAdd = () => { setEditContact(null); setForm(emptyForm); setDialogOpen(true) }
+  const openEdit = (c: Contact) => { setEditContact(c); setForm({ name: c.name, phone: c.phone, email: c.email, relationship: c.relationship, isPrimary: c.isPrimary }); setDialogOpen(true) }
 
   const handleSave = () => {
-    if (editingContact) {
-      setContacts(
-        contacts.map((c) =>
-          c.id === editingContact.id
-            ? {
-                ...c,
-                ...formData,
-                isPrimary: formData.isPrimary
-                  ? true
-                  : c.isPrimary && !formData.isPrimary,
-              }
-            : formData.isPrimary && c.isPrimary
-            ? { ...c, isPrimary: false }
-            : c
-        )
-      )
+    if (editContact) {
+      setContacts(contacts.map(c =>
+        c.id === editContact.id ? { ...c, ...form } :
+        form.isPrimary ? { ...c, isPrimary: false } : c
+      ))
     } else {
-      const newContact: Contact = {
-        id: Date.now().toString(),
-        ...formData,
-        isPrimary: formData.isPrimary,
-      }
-      if (formData.isPrimary) {
-        setContacts(
-          contacts.map((c) => ({ ...c, isPrimary: false })).concat(newContact)
-        )
-      } else {
-        setContacts(contacts.concat(newContact))
-      }
+      const newC: Contact = { id: Date.now().toString(), ...form }
+      if (form.isPrimary) setContacts(contacts.map(c => ({ ...c, isPrimary: false })).concat(newC))
+      else setContacts([...contacts, newC])
     }
-    setIsDialogOpen(false)
+    setDialogOpen(false)
   }
 
-  const handleDelete = (id: string) => {
-    setContacts(contacts.filter((c) => c.id !== id))
-    setDeleteConfirm(null)
-  }
+  const handleDelete = (id: string) => { setContacts(contacts.filter(c => c.id !== id)); setDeleteId(null) }
+  const setPrimary   = (id: string) => setContacts(contacts.map(c => ({ ...c, isPrimary: c.id === id })))
 
-  const handleSetPrimary = (id: string) => {
-    setContacts(
-      contacts.map((c) => ({
-        ...c,
-        isPrimary: c.id === id,
-      }))
-    )
-  }
+  const primary = contacts.find(c => c.isPrimary)
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto space-y-6">
+
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold font-heading">
-              Emergency Contacts
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your emergency contact list
-            </p>
-          </div>
-          <Button onClick={() => handleOpenDialog()} disabled={contacts.length >= 5}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Contact
-          </Button>
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Safety</p>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading">Emergency Contacts</h1>
+          <p className="text-sm text-muted-foreground mt-1">Who to alert when something goes wrong.</p>
         </div>
+        <Button variant="gradient" onClick={openAdd} disabled={contacts.length >= 5} className="gap-2 self-start sm:self-auto">
+          <UserPlus className="h-4 w-4" />
+          Add Contact
+        </Button>
       </motion.div>
 
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
-      >
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
+      {/* Stat row */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="grid grid-cols-3 gap-3">
+        {[
+          { icon: Users,  label: "Total Contacts", value: `${contacts.length}/5`, color: "text-[var(--primary)]",     bg: "bg-[var(--primary-glow)]"     },
+          { icon: Star,   label: "Primary Set",     value: primary ? "Yes" : "No", color: "text-[var(--success)]",     bg: "bg-[var(--success-muted)]"     },
+          { icon: Shield, label: "SOS Ready",       value: contacts.length > 0 ? "Active" : "None", color: contacts.length > 0 ? "text-[var(--success)]" : "text-[var(--destructive)]", bg: contacts.length > 0 ? "bg-[var(--success-muted)]" : "bg-[var(--destructive-muted)]" },
+        ].map(({ icon: Icon, label, value, color, bg }) => (
+          <Card key={label} className="card-hover">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${bg} flex-shrink-0`}>
+                <Icon className={`h-4 w-4 ${color}`} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Contacts</p>
-                <p className="text-2xl font-bold">{contacts.length}/5</p>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-lg font-bold font-mono">{value}</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-success/10">
-                <Star className="h-6 w-6 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Primary Contact</p>
-                <p className="text-2xl font-bold">
-                  {contacts.filter((c) => c.isPrimary).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-amber-500/10">
-                <Heart className="h-6 w-6 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">SOS Ready</p>
-                <p className="text-2xl font-bold">
-                  {contacts.length > 0 ? "Yes" : "No"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </motion.div>
 
-      {/* Contacts List */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      {/* Primary banner */}
+      {primary && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <div className="flex items-center gap-4 p-4 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-glow)]">
+            <div className="p-2 rounded-lg bg-[var(--primary)] flex-shrink-0">
+              <Star className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wide mb-0.5">Primary Contact — Notified First</p>
+              <p className="font-semibold truncate">{primary.name}</p>
+              <p className="text-xs text-muted-foreground">{primary.phone} · {primary.relationship}</p>
+            </div>
+            <Badge variant="info" className="flex-shrink-0">Primary</Badge>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Contact list */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <Card>
           <CardHeader>
-            <CardTitle>Contact List</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="p-1.5 rounded-lg bg-[var(--primary-glow)]">
+                <Users className="h-4 w-4 text-[var(--primary)]" />
+              </div>
+              Contact List ({contacts.length})
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3">
             {contacts.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No emergency contacts yet</p>
-                <Button
-                  onClick={() => handleOpenDialog()}
-                  className="mt-4"
-                  variant="outline"
-                >
-                  Add your first contact
+              <div className="text-center py-14">
+                <div className="w-16 h-16 rounded-full bg-[var(--secondary)] flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="font-medium mb-1">No emergency contacts yet</p>
+                <p className="text-sm text-muted-foreground mb-4">Add people to notify in case of an emergency.</p>
+                <Button variant="outline" onClick={openAdd} className="gap-2">
+                  <UserPlus className="h-4 w-4" /> Add your first contact
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <AnimatePresence>
-                  {contacts.map((contact) => (
+                  {contacts.map((c, i) => (
                     <motion.div
-                      key={contact.id}
-                      initial={{ opacity: 0, y: 10 }}
+                      key={c.id}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                        contact.isPrimary
-                          ? "border-primary/50 bg-primary/5"
-                          : "border-border bg-secondary"
+                      transition={{ delay: i * 0.05 }}
+                      className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-200 group ${
+                        c.isPrimary
+                          ? "border-[var(--primary)]/40 bg-[var(--primary-glow)]"
+                          : "border-[var(--border)] bg-[var(--secondary)] hover:border-[var(--primary)]/30"
                       }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback>
-                            {contact.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold">{contact.name}</p>
-                            {contact.isPrimary && (
-                              <Badge variant="default" className="text-xs">
-                                Primary
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {contact.relationship}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {contact.phone}
-                            </span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {contact.email}
-                            </span>
-                          </div>
+                      <Avatar className={`h-11 w-11 bg-gradient-to-br ${avatarColors[i % avatarColors.length]} flex-shrink-0`}>
+                        <AvatarFallback className={`bg-gradient-to-br ${avatarColors[i % avatarColors.length]} text-white font-bold`}>
+                          {c.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="font-semibold text-sm truncate">{c.name}</p>
+                          {c.isPrimary && <Badge variant="info" className="text-[10px] px-1.5 py-0">Primary</Badge>}
+                          <span className="text-xs text-muted-foreground">{c.relationship}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Phone className="h-3 w-3" />{c.phone}
+                          </span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 hidden sm:flex">
+                            <Mail className="h-3 w-3" />{c.email}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {!contact.isPrimary && (
-                          <Button
-                            onClick={() => handleSetPrimary(contact.id)}
-                            variant="ghost"
-                            size="sm"
-                          >
-                            <Star className="h-4 w-4" />
-                          </Button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {!c.isPrimary && (
+                          <button onClick={() => setPrimary(c.id)} className="icon-btn" title="Set as primary">
+                            <Star className="h-3.5 w-3.5" />
+                          </button>
                         )}
-                        <Button
-                          onClick={() => handleOpenDialog(contact)}
-                          variant="ghost"
-                          size="icon"
+                        <button onClick={() => openEdit(c)} className="icon-btn" title="Edit">
+                          <Edit className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteId(c.id)}
+                          className="icon-btn hover:bg-[var(--destructive-muted)] hover:text-[var(--destructive)] hover:border-[var(--destructive)]/30"
+                          title="Delete"
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => setDeleteConfirm(contact.id)}
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
+
+                {contacts.length < 5 && (
+                  <button
+                    onClick={openAdd}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-[var(--border)] text-sm text-muted-foreground hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all duration-200 mt-1"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add another contact ({contacts.length}/5)
+                  </button>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingContact ? "Edit Contact" : "Add Emergency Contact"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="John Doe"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                placeholder="+1 555-0100"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                placeholder="john@example.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="relationship">Relationship</Label>
-              <Input
-                id="relationship"
-                value={formData.relationship}
-                onChange={(e) =>
-                  setFormData({ ...formData, relationship: e.target.value })
-                }
-                placeholder="Spouse, Parent, Friend..."
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isPrimary"
-                checked={formData.isPrimary}
-                onChange={(e) =>
-                  setFormData({ ...formData, isPrimary: e.target.checked })
-                }
-                className="rounded border-border"
-              />
-              <Label htmlFor="isPrimary" className="font-normal">
-                Set as primary contact (first to be notified)
-              </Label>
-            </div>
+      {/* SOS Info */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <div className="p-4 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-muted)] flex items-start gap-3">
+          <AlertTriangle className="h-4 w-4 text-[var(--warning)] mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-[var(--warning)]">How SOS Alerts Work</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              When an accident is detected, all contacts are alerted via SMS and push notification with your live GPS location. Primary contact is called first.
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>
-              {editingContact ? "Save Changes" : "Add Contact"}
-            </Button>
+        </div>
+      </motion.div>
+
+      {/* Add / Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-[var(--card)] border-[var(--border)] max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editContact ? "Edit Contact" : "Add Emergency Contact"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {[
+              { id: "name",         label: "Full Name",    placeholder: "Priya Sharma",        type: "text"  },
+              { id: "phone",        label: "Phone",         placeholder: "+91 98765 43210",     type: "tel"   },
+              { id: "email",        label: "Email",         placeholder: "contact@example.com", type: "email" },
+              { id: "relationship", label: "Relationship",  placeholder: "Spouse, Parent…",     type: "text"  },
+            ].map(({ id, label, placeholder, type }) => (
+              <div key={id} className="space-y-1.5">
+                <Label htmlFor={id} className="text-sm">{label}</Label>
+                <Input
+                  id={id} type={type} placeholder={placeholder}
+                  value={(form as any)[id]}
+                  onChange={e => setForm({ ...form, [id]: e.target.value })}
+                />
+              </div>
+            ))}
+            <label className="flex items-center gap-2.5 p-3 rounded-lg bg-[var(--secondary)] cursor-pointer hover:bg-[var(--muted)] transition-colors">
+              <input
+                type="checkbox" checked={form.isPrimary}
+                onChange={e => setForm({ ...form, isPrimary: e.target.checked })}
+                className="w-4 h-4 rounded accent-[var(--primary)]"
+              />
+              <div>
+                <p className="text-sm font-medium">Set as primary contact</p>
+                <p className="text-xs text-muted-foreground">This person is called first in an emergency</p>
+              </div>
+            </label>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="gradient" onClick={handleSave}>{editContact ? "Save Changes" : "Add Contact"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <DialogContent>
+      {/* Delete Confirm */}
+      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <DialogContent className="bg-[var(--card)] border-[var(--border)] max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Contact</DialogTitle>
+            <DialogTitle>Remove Contact?</DialogTitle>
           </DialogHeader>
-          <p className="py-4">
-            Are you sure you want to delete this contact? This action cannot be
-            undone.
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
-            >
-              Delete
+          <p className="text-sm text-muted-foreground py-2">This contact will no longer receive SOS alerts. This cannot be undone.</p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button variant="gradient-warm" onClick={() => deleteId && handleDelete(deleteId)} className="gap-2">
+              <Trash2 className="h-4 w-4" /> Remove
             </Button>
           </DialogFooter>
         </DialogContent>
