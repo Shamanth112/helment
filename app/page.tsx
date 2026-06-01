@@ -44,12 +44,7 @@ const features = [
   },
 ]
 
-const stats = [
-  { value: "10K+", label: "Active Riders" },
-  { value: "99.9%", label: "Detection Accuracy" },
-  { value: "50ms", label: "Alert Response" },
-  { value: "24/7", label: "System Monitoring" },
-]
+
 
 const container = {
   hidden: { opacity: 0 },
@@ -85,10 +80,10 @@ export default function LandingPage() {
                 About
               </Link>
               <Link href="/login">
-                <Button variant="ghost">Sign In</Button>
+                <Button variant="ghost">Log In</Button>
               </Link>
               <Link href="/register">
-                <Button variant="gradient">Get Started</Button>
+                <Button variant="gradient">Sign Up</Button>
               </Link>
             </div>
           </div>
@@ -119,13 +114,13 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
               <Link href="/register">
                 <Button size="xl" variant="gradient" className="w-full sm:w-auto">
-                  Start Free Trial
+                  Sign Up
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link href="/dashboard">
+              <Link href="/login">
                 <Button size="xl" variant="outline" className="w-full sm:w-auto">
-                  View Demo
+                  Log In
                 </Button>
               </Link>
             </div>
@@ -153,33 +148,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-16 border-y border-border bg-secondary/30">
-        <div className="container mx-auto px-4">
-          <motion.div
-            variants={container}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
-          >
-            {stats.map((stat) => (
-              <motion.div
-                key={stat.label}
-                variants={item}
-                className="text-center"
-              >
-                <div className="text-3xl md:text-4xl font-bold font-heading gradient-text">
-                  {stat.value}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+
 
       {/* Features */}
       <section id="features" className="py-20 px-4">
@@ -239,19 +208,18 @@ export default function LandingPage() {
                 Ready to Ride Safer?
               </h2>
               <p className="text-muted-foreground max-w-xl mx-auto mb-8">
-                Join thousands of riders who trust Helmet AI to keep them safe on
-                every journey. Start your free trial today.
+                Join Helmet AI today and experience real-time accident detection and emergency notification.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/register">
                   <Button size="xl" variant="gradient">
-                    Get Started Free
+                    Sign Up
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
                 <Link href="/login">
                   <Button size="xl" variant="outline">
-                    Sign In
+                    Log In
                   </Button>
                 </Link>
               </div>
